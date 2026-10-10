@@ -104,3 +104,29 @@ p, h2 { margin: 0; }
     .cell { left: 5px; top: 5px; }
     .tile { left: 5px; top: 5px; }
 }
+
+
+/* Keep the page still on phones while allowing swipes to control the game. */
+html, body {
+    overscroll-behavior: none;
+}
+.grid {
+    touch-action: none;
+    overscroll-behavior: contain;
+}
+@media (max-width: 600px) {
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    body {
+        min-height: 100dvh;
+        padding: 12px 10px;
+        touch-action: none;
+    }
+    .container {
+        width: min(468px, 100%);
+        margin: 4px auto 0;
+    }
+}
