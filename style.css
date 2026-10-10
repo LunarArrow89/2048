@@ -7,8 +7,16 @@
 }
 * { box-sizing: border-box; }
 body {
-    background: linear-gradient(135deg, #eaf8ff 0%, #e8e0ff 52%, #d6eaff 100%);
+    background-color: #e9eaff;
+    background-image:
+        radial-gradient(ellipse at 12% 18%, rgba(143, 190, 255, .78) 0%, rgba(143, 190, 255, 0) 43%),
+        radial-gradient(ellipse at 86% 22%, rgba(204, 173, 255, .74) 0%, rgba(204, 173, 255, 0) 45%),
+        radial-gradient(ellipse at 28% 78%, rgba(170, 220, 255, .82) 0%, rgba(170, 220, 255, 0) 48%),
+        radial-gradient(ellipse at 88% 88%, rgba(224, 190, 255, .72) 0%, rgba(224, 190, 255, 0) 44%),
+        radial-gradient(ellipse at 52% 48%, rgba(255, 255, 255, .78) 0%, rgba(255, 255, 255, 0) 62%),
+        linear-gradient(135deg, #eaf8ff, #e8e0ff 52%, #d6eaff);
     background-attachment: fixed;
+    background-size: 150% 150%;
     display: flex;
     justify-content: center;
     min-height: 100vh;
@@ -53,6 +61,7 @@ p, h2 { margin: 0; }
     line-height: 1;
     box-shadow: inset 0 -3px 0 rgba(98,96,160,.08), 0 3px 8px rgba(85,91,151,.08);
     transition: left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), background-color 120ms ease;
+    will-change: left, top;
     z-index: 1;
 }
 .tile-new { animation: tile-appear 180ms ease-out; }
@@ -66,7 +75,7 @@ p, h2 { margin: 0; }
     body { padding: 18px 10px; }
     .container { margin-top: 8px; }
     .grid { border-width: 5px; border-radius: 14px; }
-    .cell, .tile { width: calc(25% - 14px); height: calc(25% - 14px); border-radius: 8px; }
+    .cell, .tile { width: calc(25% - 10px); height: calc(25% - 10px); border-radius: 8px; }
     .cell { left: 5px; top: 5px; }
     .tile { left: 5px; top: 5px; }
 }
