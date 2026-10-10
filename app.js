@@ -70,8 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 el.dataset.id = tile.id;
                 el.textContent = tile.value;
                 el.dataset.value = tile.value;
-                el.style.setProperty("--row", tile.row);
-                el.style.setProperty("--col", tile.col);
+                el.style.left = `calc(${tile.col * 25}% + 7px)`;
+                el.style.top = `calc(${tile.row * 25}% + 7px)`;
                 el.style.transition = "none";
                 grid.appendChild(el);
                 void el.offsetWidth;
@@ -81,8 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 el.dataset.value = tile.value;
                 el.textContent = tile.value;
-                el.style.setProperty("--row", tile.row);
-                el.style.setProperty("--col", tile.col);
+                el.style.left = `calc(${tile.col * 25}% + 7px)`;
+                el.style.top = `calc(${tile.row * 25}% + 7px)`;
                 if (mergedIds.has(tile.id)) {
                     el.classList.remove("tile-merge");
                     void el.offsetWidth;
@@ -245,8 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.classList.add("sliding-board");
     grid.querySelectorAll(".cell").forEach(cell => {
         const index = cells.indexOf(cell);
-        cell.style.setProperty("--row", Math.floor(index / width));
-        cell.style.setProperty("--col", index % width);
+        cell.style.left = `calc(${(index % width) * 25}% + 7px)`;
+        cell.style.top = `calc(${Math.floor(index / width) * 25}% + 7px)`;
     });
     tiles = [];
     spawnTile();
