@@ -298,10 +298,6 @@ document.addEventListener("DOMContentLoaded", () => {
         event.stopPropagation();
         resetGame();
     });
-    resetButton.addEventListener("touchend", event => {
-        event.preventDefault();
-        resetGame();
-    }, { passive: false });
 
     grid.classList.add("sliding-board");
     cells.forEach((cell, index) => {
