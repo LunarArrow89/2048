@@ -248,6 +248,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Prevent mobile browsers from scrolling the page during vertical game swipes.
+    // The board's touchend handler still reads the swipe and moves the tiles.
+    document.addEventListener("touchmove", event => {
+        event.preventDefault();
+    }, { passive: false });
+
     let touchStartX = 0;
     let touchStartY = 0;
     grid.addEventListener("touchstart", event => {
