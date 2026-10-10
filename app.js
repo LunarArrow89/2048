@@ -62,6 +62,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function resetGame() {
+        // Remove the previous save first, then start and save a fresh board.
+        try {
+            localStorage.removeItem(saveKey);
+        } catch (error) {
+            console.warn("Could not clear the previous saved game.", error);
+        }
+
         tiles = [];
         nextId = 1;
         score = 0;
@@ -125,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 el.dataset.value = tile.value;
                 el.textContent = tile.value;
-                // Force the browser to commit the previous position before moving.
                 void el.offsetWidth;
                 positionTile(el, tile.row, tile.col);
                 if (mergedIds.has(tile.id)) {
@@ -195,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
         busy = true;
         renderAnimated(mergedIds);
 
-        // Wait until the 280ms slide finishes before adding the next tile.
         setTimeout(() => {
             spawnTile();
             renderAnimated();
