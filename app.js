@@ -9,9 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let score = 0;
     let busy = false;
     let gameEnded = false;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Empty spaces stay in place while the number tiles slide above them.
     grid.innerHTML = "";
     for (let i = 0; i < width * width; i++) {
         const cell = document.createElement("div");
@@ -22,6 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function makeTile(value, row, col) {
         return { id: nextId++, value, row, col };
+    }
+
+    function positionTile(el, row, col) {
+        el.style.left = `calc(${col * 25}% + var(--tile-inset, 7px))`;
+        el.style.top = `calc(${row * 25}% + var(--tile-inset, 7px))`;
     }
 
     function spawnTile() {
@@ -38,22 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tiles.push(makeTile(Math.random() < 0.9 ? 2 : 4, spot.row, spot.col));
     }
 
-    function render() {
-        grid.querySelectorAll(".tile").forEach(tile => tile.remove());
-        tiles.forEach(tile => {
-            const el = document.createElement("div");
-            el.className = "tile" + (tile.isNew ? " tile-new" : "");
-            el.textContent = tile.value;
-            el.dataset.value = tile.value;
-            el.style.setProperty("--row", tile.row);
-            el.style.setProperty("--col", tile.col);
-            grid.appendChild(el);
-            tile.isNew = false;
-        });
-        scoreDisplay.textContent = score;
-    }
-
-    function renderAnimated(oldTiles, mergedIds = new Set()) {
+    function renderAnimated(mergedIds = new Set()) {
         const existing = new Map();
         grid.querySelectorAll(".tile").forEach(el => existing.set(Number(el.dataset.id), el));
 
@@ -68,11 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 el = document.createElement("div");
                 el.className = "tile";
                 el.dataset.id = tile.id;
-                el.textContent = tile.value;
                 el.dataset.value = tile.value;
-                el.style.left = `calc(${tile.col * 25}% + 7px)`;
-                el.style.top = `calc(${tile.row * 25}% + 7px)`;
+                el.textContent = tile.value;
                 el.style.transition = "none";
+                positionTile(el, tile.row, tile.col);
                 grid.appendChild(el);
                 void el.offsetWidth;
                 el.style.transition = "left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), background-color 120ms ease";
@@ -81,8 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 el.dataset.value = tile.value;
                 el.textContent = tile.value;
-                el.style.left = `calc(${tile.col * 25}% + 7px)`;
-                el.style.top = `calc(${tile.row * 25}% + 7px)`;
+                // Force the browser to commit the previous position before moving.
+                void el.offsetWidth;
+                positionTile(el, tile.row, tile.col);
                 if (mergedIds.has(tile.id)) {
                     el.classList.remove("tile-merge");
                     void el.offsetWidth;
@@ -146,20 +134,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         tiles = next;
         score += gained;
-        busy = !reduceMotion;
-        renderAnimated(before, mergedIds);
-        if (reduceMotion) {
+        busy = true;
+        renderAnimated(mergedIds);
+
+        // Wait until the 280ms slide finishes before adding the next tile.
+        setTimeout(() => {
             spawnTile();
-            renderAnimated(before);
+            renderAnimated();
+            busy = false;
             finishTurn();
-        } else {
-            setTimeout(() => {
-                spawnTile();
-                renderAnimated(before);
-                busy = false;
-                finishTurn();
-            }, 150);
-        }
+        }, 300);
     }
 
     function finishTurn() {
@@ -213,19 +197,9 @@ document.addEventListener("DOMContentLoaded", () => {
             : (dy > 0 ? "down" : "up"));
     }, { passive: true });
 
-    // Keep the colors in the same soft blue and lavender family.
-    function colorFor(value) {
-        const colors = {
-            2: "#f4f1ff", 4: "#e5e5ff", 8: "#cdeeff",
-            16: "#b9dcff", 32: "#c7caff", 64: "#b8b8f4",
-            128: "#b6d5ff", 256: "#b5c5f5", 512: "#9de0ff",
-            1024: "#b7b0ff", 2048: "#9c8ce8"
-        };
-        return colors[value] || "#8573d0";
-    }
-
     const style = document.createElement("style");
     style.textContent = `
+        .grid { --tile-inset: 7px; }
         .tile { background: var(--tile-color, #f4f1ff); }
         .tile[data-value="2"] { --tile-color: #f4f1ff; }
         .tile[data-value="4"] { --tile-color: #e5e5ff; }
@@ -238,18 +212,16 @@ document.addEventListener("DOMContentLoaded", () => {
         .tile[data-value="512"] { --tile-color: #9de0ff; }
         .tile[data-value="1024"] { --tile-color: #b7b0ff; }
         .tile[data-value="2048"] { --tile-color: #9c8ce8; }
+        @media (max-width: 420px) { .grid { --tile-inset: 5px; } }
     `;
     document.head.appendChild(style);
 
-    // Rebuild the board with positioned tiles so their movement can animate.
     grid.classList.add("sliding-board");
-    grid.querySelectorAll(".cell").forEach(cell => {
-        const index = cells.indexOf(cell);
-        cell.style.left = `calc(${(index % width) * 25}% + 7px)`;
-        cell.style.top = `calc(${Math.floor(index / width) * 25}% + 7px)`;
+    cells.forEach((cell, index) => {
+        positionTile(cell, Math.floor(index / width), index % width);
     });
-    tiles = [];
+
     spawnTile();
     spawnTile();
-    renderAnimated([]);
+    renderAnimated();
 });
