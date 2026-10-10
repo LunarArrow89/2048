@@ -6,17 +6,11 @@
     --panel: #c9dfff;
 }
 * { box-sizing: border-box; }
+html { min-height: 100%; background: #e9eaff; }
 body {
-    background-color: #e9eaff;
-    background-image:
-        radial-gradient(ellipse at 12% 18%, rgba(143, 190, 255, .78) 0%, rgba(143, 190, 255, 0) 43%),
-        radial-gradient(ellipse at 86% 22%, rgba(204, 173, 255, .74) 0%, rgba(204, 173, 255, 0) 45%),
-        radial-gradient(ellipse at 28% 78%, rgba(170, 220, 255, .82) 0%, rgba(170, 220, 255, 0) 48%),
-        radial-gradient(ellipse at 88% 88%, rgba(224, 190, 255, .72) 0%, rgba(224, 190, 255, 0) 44%),
-        radial-gradient(ellipse at 52% 48%, rgba(255, 255, 255, .78) 0%, rgba(255, 255, 255, 0) 62%),
-        linear-gradient(135deg, #eaf8ff, #e8e0ff 52%, #d6eaff);
-    background-attachment: fixed;
-    background-size: 150% 150%;
+    position: relative;
+    isolation: isolate;
+    background: #e9eaff;
     display: flex;
     justify-content: center;
     min-height: 100vh;
@@ -25,22 +19,53 @@ body {
     font-family: "Clear Sans", "Trebuchet MS", Helvetica, sans-serif;
     color: var(--ink);
 }
-.container { width: min(468px, 100%); margin: 12px auto 30px; }
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: #f0edff;
+    background-image:
+        radial-gradient(ellipse 36% 30% at 8% 12%, rgba(92, 169, 255, .82) 0%, rgba(125, 190, 255, .48) 42%, transparent 76%),
+        radial-gradient(ellipse 34% 38% at 88% 14%, rgba(184, 132, 255, .8) 0%, rgba(209, 177, 255, .45) 48%, transparent 78%),
+        radial-gradient(ellipse 42% 32% at 20% 55%, rgba(109, 207, 255, .78) 0%, rgba(161, 225, 255, .4) 48%, transparent 78%),
+        radial-gradient(ellipse 38% 40% at 82% 52%, rgba(211, 151, 255, .72) 0%, rgba(225, 192, 255, .42) 46%, transparent 78%),
+        radial-gradient(ellipse 40% 32% at 48% 92%, rgba(127, 174, 255, .78) 0%, rgba(187, 204, 255, .42) 48%, transparent 78%),
+        radial-gradient(ellipse 25% 24% at 55% 35%, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .5) 48%, transparent 80%),
+        linear-gradient(135deg, #e3f5ff 0%, #f2e7ff 48%, #dceaff 100%);
+    background-size: 130% 130%;
+    background-position: center;
+    opacity: 1;
+}
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .3;
+    background-image:
+        repeating-radial-gradient(ellipse at 30% 30%, rgba(255,255,255,.24) 0 2px, rgba(120,145,220,.08) 3px 4px, transparent 5px 9px);
+    background-size: 170px 150px;
+    mix-blend-mode: soft-light;
+}
+.container { position: relative; z-index: 1; width: min(468px, 100%); margin: 12px auto 30px; }
 .info { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 h1 { font-size: clamp(42px, 12vw, 66px); line-height: .95; letter-spacing: -2px; color: #8170ce; margin: 0; text-shadow: 3px 4px 0 #c8eaff; }
 p, h2 { margin: 0; }
-#result { color: #5e5689; font-size: 16px; line-height: 1.5; padding: 12px 15px; border: 1px solid rgba(139,123,211,.22); background: rgba(255,255,255,.65); border-radius: 14px; }
+#result { color: #5e5689; font-size: 16px; line-height: 1.5; padding: 12px 15px; border: 1px solid rgba(139,123,211,.22); background: rgba(255,255,255,.72); border-radius: 14px; }
 #result b { color: #7965cf; }
 .grid {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
-    background: rgba(161,180,233,.72);
-    border: 7px solid rgba(161,180,233,.72);
+    background: rgba(161,180,233,.78);
+    border: 7px solid rgba(161,180,233,.78);
     border-radius: 18px;
     margin-top: 18px;
     overflow: hidden;
-    box-shadow: 0 14px 34px rgba(103,105,177,.18);
+    box-shadow: 0 14px 34px rgba(103,105,177,.2);
 }
 .cell, .tile {
     position: absolute;
@@ -50,7 +75,7 @@ p, h2 { margin: 0; }
     height: calc(25% - 14px);
     border-radius: 10px;
 }
-.cell { background: rgba(245,242,255,.58); }
+.cell { background: rgba(245,242,255,.62); }
 .tile {
     display: flex;
     align-items: center;
