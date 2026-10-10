@@ -130,3 +130,25 @@ html, body {
         margin: 4px auto 0;
     }
 }
+
+
+#reset-button {
+    display: block;
+    width: 100%;
+    margin: 12px 0 0;
+    padding: 12px 16px;
+    border: 1px solid rgba(139, 123, 211, .35);
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(221,232,255,.92));
+    color: #65569e;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    box-shadow: 0 4px 0 rgba(111,103,177,.12);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+#reset-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(111,103,177,.12);
+}
