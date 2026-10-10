@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let score = 0;
     let busy = false;
     let gameEnded = false;
+    let turnToken = 0;
     const saveKey = "moms2048SaveV1";
 
     grid.innerHTML = "";
@@ -62,11 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function resetGame() {
-        // Clear this game's local storage before starting a fresh, newly saved board.
+        // Invalidate any delayed animation callback from the previous game.
+        turnToken++;
         try {
-            localStorage.clear();
+            localStorage.removeItem(saveKey);
         } catch (error) {
-            console.warn("Could not clear local storage.", error);
+            console.warn("Could not clear the saved game.", error);
         }
 
         tiles = [];
@@ -201,7 +203,9 @@ document.addEventListener("DOMContentLoaded", () => {
         busy = true;
         renderAnimated(mergedIds);
 
+        const thisTurn = turnToken;
         setTimeout(() => {
+            if (thisTurn !== turnToken) return;
             spawnTile();
             renderAnimated();
             busy = false;
@@ -288,11 +292,16 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     document.head.appendChild(style);
 
-    document.querySelector("#reset-button").addEventListener("click", () => {
-        if (confirm("Start a new game? Your current board and score will be erased.")) {
-            resetGame();
-        }
+    const resetButton = document.querySelector("#reset-button");
+    resetButton.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        resetGame();
     });
+    resetButton.addEventListener("touchend", event => {
+        event.preventDefault();
+        resetGame();
+    }, { passive: false });
 
     grid.classList.add("sliding-board");
     cells.forEach((cell, index) => {
