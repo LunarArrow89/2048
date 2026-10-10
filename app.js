@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 el.style.transition = "none";
                 grid.appendChild(el);
                 void el.offsetWidth;
-                el.style.transition = "";
+                el.style.transition = "left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), background-color 120ms ease";
                 el.classList.add("tile-new");
                 setTimeout(() => el.classList.remove("tile-new"), 220);
             } else {
