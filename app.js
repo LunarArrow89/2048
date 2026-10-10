@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let score = 0;
     let busy = false;
     let gameEnded = false;
+    const saveKey = "moms2048SaveV1";
 
     grid.innerHTML = "";
     for (let i = 0; i < width * width; i++) {
@@ -16,6 +17,62 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.className = "cell";
         grid.appendChild(cell);
         cells.push(cell);
+    }
+
+    function saveGame() {
+        try {
+            localStorage.setItem(saveKey, JSON.stringify({
+                tiles, nextId, score, gameEnded
+            }));
+        } catch (error) {
+            console.warn("Could not save the game on this device.", error);
+        }
+    }
+
+    function loadGame() {
+        try {
+            const raw = localStorage.getItem(saveKey);
+            if (!raw) return false;
+            const saved = JSON.parse(raw);
+            if (!saved || !Array.isArray(saved.tiles) ||
+                !Number.isFinite(saved.score) ||
+                !saved.tiles.every(tile =>
+                    Number.isInteger(tile.id) &&
+                    Number.isInteger(tile.value) && tile.value > 0 &&
+                    Number.isInteger(tile.row) && tile.row >= 0 && tile.row < width &&
+                    Number.isInteger(tile.col) && tile.col >= 0 && tile.col < width
+                ) ||
+                saved.tiles.length > width * width ||
+                new Set(saved.tiles.map(tile => tile.row + "," + tile.col)).size !== saved.tiles.length
+            ) {
+                localStorage.removeItem(saveKey);
+                return false;
+            }
+            tiles = saved.tiles;
+            score = saved.score;
+            nextId = Number.isInteger(saved.nextId)
+                ? Math.max(saved.nextId, ...tiles.map(tile => tile.id + 1), 1)
+                : Math.max(1, ...tiles.map(tile => tile.id + 1));
+            gameEnded = Boolean(saved.gameEnded);
+            return true;
+        } catch (error) {
+            console.warn("Could not load the saved game.", error);
+            return false;
+        }
+    }
+
+    function resetGame() {
+        tiles = [];
+        nextId = 1;
+        score = 0;
+        busy = false;
+        gameEnded = false;
+        resultDisplay.innerHTML = 'A little game made with love 💜 Slide the tiles and reach <b>2048</b>!';
+        grid.querySelectorAll(".tile").forEach(tile => tile.remove());
+        spawnTile();
+        spawnTile();
+        renderAnimated();
+        saveGame();
     }
 
     function makeTile(value, row, col) {
@@ -80,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         scoreDisplay.textContent = score;
+        saveGame();
     }
 
     function move(direction) {
@@ -143,6 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
             renderAnimated();
             busy = false;
             finishTurn();
+            saveGame();
         }, 300);
     }
 
@@ -150,12 +209,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tiles.some(tile => tile.value >= 2048)) {
             resultDisplay.innerHTML = "You did it, Mom! <b>2048!</b> 💜";
             gameEnded = true;
+            saveGame();
             return;
         }
         if (!hasMoves()) {
             resultDisplay.textContent = "No more moves — thanks for playing! 💙";
             gameEnded = true;
         }
+        saveGame();
     }
 
     function hasMoves() {
@@ -216,12 +277,24 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     document.head.appendChild(style);
 
+    document.querySelector("#reset-button").addEventListener("click", () => {
+        if (confirm("Start a new game? Your current board and score will be erased.")) {
+            resetGame();
+        }
+    });
+
     grid.classList.add("sliding-board");
     cells.forEach((cell, index) => {
         positionTile(cell, Math.floor(index / width), index % width);
     });
 
-    spawnTile();
-    spawnTile();
-    renderAnimated();
+    if (loadGame()) {
+        renderAnimated();
+        if (gameEnded) finishTurn();
+    } else {
+        spawnTile();
+        spawnTile();
+        renderAnimated();
+        saveGame();
+    }
 });
