@@ -62,11 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function resetGame() {
-        // Remove the previous save first, then start and save a fresh board.
+        // Clear this game's local storage before starting a fresh, newly saved board.
         try {
-            localStorage.removeItem(saveKey);
+            localStorage.clear();
         } catch (error) {
-            console.warn("Could not clear the previous saved game.", error);
+            console.warn("Could not clear local storage.", error);
         }
 
         tiles = [];
