@@ -5,8 +5,558 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#e8e0ff">
     <title>Mom's 2048</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="app.js" defer></script>
+    <style>
+:root {
+    --ink: #39345f;
+    --blue: #d9f0ff;
+    --purple: #e8ddff;
+    --deep-purple: #8c78d8;
+    --panel: #c9dfff;
+}
+* { box-sizing: border-box; }
+html { min-height: 100%; background: #e9eaff; }
+body {
+    position: relative;
+    isolation: isolate;
+    background: #e9eaff;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 24px 14px;
+    font-family: "Clear Sans", "Trebuchet MS", Helvetica, sans-serif;
+    color: var(--ink);
+}
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: #f0edff;
+    background-image:
+        radial-gradient(ellipse 36% 30% at 8% 12%, rgba(92, 169, 255, .82) 0%, rgba(125, 190, 255, .48) 42%, transparent 76%),
+        radial-gradient(ellipse 34% 38% at 88% 14%, rgba(184, 132, 255, .8) 0%, rgba(209, 177, 255, .45) 48%, transparent 78%),
+        radial-gradient(ellipse 42% 32% at 20% 55%, rgba(109, 207, 255, .78) 0%, rgba(161, 225, 255, .4) 48%, transparent 78%),
+        radial-gradient(ellipse 38% 40% at 82% 52%, rgba(211, 151, 255, .72) 0%, rgba(225, 192, 255, .42) 46%, transparent 78%),
+        radial-gradient(ellipse 40% 32% at 48% 92%, rgba(127, 174, 255, .78) 0%, rgba(187, 204, 255, .42) 48%, transparent 78%),
+        radial-gradient(ellipse 25% 24% at 55% 35%, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .5) 48%, transparent 80%),
+        linear-gradient(135deg, #e3f5ff 0%, #f2e7ff 48%, #dceaff 100%);
+    background-size: 130% 130%;
+    background-position: center;
+    opacity: 1;
+}
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .3;
+    background-image:
+        repeating-radial-gradient(ellipse at 30% 30%, rgba(255,255,255,.24) 0 2px, rgba(120,145,220,.08) 3px 4px, transparent 5px 9px);
+    background-size: 170px 150px;
+    mix-blend-mode: soft-light;
+}
+.container { position: relative; z-index: 1; width: min(468px, 100%); margin: 12px auto 30px; }
+.info { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+h1 { font-size: clamp(42px, 12vw, 66px); line-height: .95; letter-spacing: -2px; color: #8170ce; margin: 0; text-shadow: 3px 4px 0 #c8eaff; }
+p, h2 { margin: 0; }
+#result { color: #5e5689; font-size: 16px; line-height: 1.5; padding: 12px 15px; border: 1px solid rgba(139,123,211,.22); background: rgba(255,255,255,.72); border-radius: 14px; }
+#result b { color: #7965cf; }
+.grid {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: rgba(161,180,233,.78);
+    border: 7px solid rgba(161,180,233,.78);
+    border-radius: 18px;
+    margin-top: 18px;
+    overflow: hidden;
+    box-shadow: 0 14px 34px rgba(103,105,177,.2);
+}
+.cell, .tile {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    width: calc(25% - 14px);
+    height: calc(25% - 14px);
+    border-radius: 10px;
+}
+.cell { background: rgba(245,242,255,.62); }
+.tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7569a9;
+    font-weight: 800;
+    font-size: clamp(23px, 6.7vw, 46px);
+    line-height: 1;
+    box-shadow: inset 0 -3px 0 rgba(98,96,160,.08), 0 3px 8px rgba(85,91,151,.08);
+    transition: left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), background-color 120ms ease;
+    will-change: left, top;
+    z-index: 1;
+}
+.tile-new { animation: tile-appear 180ms ease-out; }
+.tile-merge { animation: tile-merge 220ms ease-out; z-index: 2; }
+@keyframes tile-appear { from { transform: scale(.55); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+@keyframes tile-merge { 0% { transform: scale(.88); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.score-container { text-align: center; min-width: 82px; padding: 7px 10px; height: 62px; border-radius: 13px; background: linear-gradient(145deg,#a99be9,#8a9fe5); color: #fff; box-shadow: 0 5px 0 rgba(111,103,177,.16); }
+#score { font-size: 28px; line-height: 1.2; }
+.score-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; opacity: .9; }
+@media (max-width: 420px) {
+    body { padding: 18px 10px; }
+    .container { margin-top: 8px; }
+    .grid { border-width: 5px; border-radius: 14px; }
+    .cell, .tile { width: calc(25% - 10px); height: calc(25% - 10px); border-radius: 8px; }
+    .cell { left: 5px; top: 5px; }
+    .tile { left: 5px; top: 5px; }
+}
+
+
+/* Keep the page still on phones while allowing swipes to control the game. */
+html, body {
+    overscroll-behavior: none;
+}
+.grid {
+    touch-action: none;
+    overscroll-behavior: contain;
+}
+@media (max-width: 600px) {
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    body {
+        min-height: 100dvh;
+        padding: 12px 10px;
+        touch-action: none;
+    }
+    .container {
+        width: min(468px, 100%);
+        margin: 4px auto 0;
+    }
+}
+
+
+#reset-button {
+    display: block;
+    width: 100%;
+    margin: 12px 0 0;
+    padding: 12px 16px;
+    border: 1px solid rgba(139, 123, 211, .35);
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(221,232,255,.92));
+    color: #65569e;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    box-shadow: 0 4px 0 rgba(111,103,177,.12);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+#reset-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(111,103,177,.12);
+}
+
+
+/* Lock the mobile viewport so the page cannot drift vertically. */
+@media (max-width: 600px) {
+    html {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+    body {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
+    }
+    .container {
+        max-height: 100%;
+        overflow: hidden;
+    }
+}
+
+
+/* A compact, thumb-friendly reset control that fits the phone layout. */
+#reset-button {
+    width: auto;
+    min-width: 150px;
+    min-height: 44px;
+    margin: 10px auto 0;
+    padding: 10px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(140, 120, 216, .4);
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffffff 0%, #eee9ff 55%, #e2f2ff 100%);
+    color: #6d5ab4;
+    font-size: 15px;
+    letter-spacing: .2px;
+    box-shadow: 0 3px 0 rgba(111, 103, 177, .16), 0 5px 14px rgba(103, 105, 177, .10);
+    position: relative;
+    z-index: 5;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+#reset-button:focus-visible {
+    outline: 3px solid rgba(140, 120, 216, .45);
+    outline-offset: 3px;
+}
+#reset-button:active {
+    transform: translateY(2px) scale(.98);
+    box-shadow: 0 1px 0 rgba(111, 103, 177, .16);
+}
+@media (max-width: 600px) {
+    #reset-button {
+        min-height: 42px;
+        margin-top: 8px;
+        padding: 9px 20px;
+        font-size: 14px;
+    }
+    #result {
+        padding: 9px 12px;
+        font-size: 14px;
+    }
+    .grid {
+        margin-top: 12px;
+    }
+}
+
+    </style>
+    <script defer>
+document.addEventListener("DOMContentLoaded", () => {
+    const grid = document.querySelector(".grid");
+    const scoreDisplay = document.querySelector("#score");
+    const resultDisplay = document.querySelector("#result");
+    const width = 4;
+    const cells = [];
+    let tiles = [];
+    let nextId = 1;
+    let score = 0;
+    let busy = false;
+    let gameEnded = false;
+    let turnToken = 0;
+    const saveKey = "moms2048SaveV1";
+
+    grid.innerHTML = "";
+    for (let i = 0; i < width * width; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        grid.appendChild(cell);
+        cells.push(cell);
+    }
+
+    function saveGame() {
+        try {
+            localStorage.setItem(saveKey, JSON.stringify({
+                tiles, nextId, score, gameEnded
+            }));
+        } catch (error) {
+            console.warn("Could not save the game on this device.", error);
+        }
+    }
+
+    function loadGame() {
+        try {
+            const raw = localStorage.getItem(saveKey);
+            if (!raw) return false;
+            const saved = JSON.parse(raw);
+            if (!saved || !Array.isArray(saved.tiles) ||
+                !Number.isFinite(saved.score) ||
+                !saved.tiles.every(tile =>
+                    Number.isInteger(tile.id) &&
+                    Number.isInteger(tile.value) && tile.value > 0 &&
+                    Number.isInteger(tile.row) && tile.row >= 0 && tile.row < width &&
+                    Number.isInteger(tile.col) && tile.col >= 0 && tile.col < width
+                ) ||
+                saved.tiles.length > width * width ||
+                new Set(saved.tiles.map(tile => tile.row + "," + tile.col)).size !== saved.tiles.length
+            ) {
+                localStorage.removeItem(saveKey);
+                return false;
+            }
+            tiles = saved.tiles;
+            score = saved.score;
+            nextId = Number.isInteger(saved.nextId)
+                ? Math.max(saved.nextId, ...tiles.map(tile => tile.id + 1), 1)
+                : Math.max(1, ...tiles.map(tile => tile.id + 1));
+            gameEnded = Boolean(saved.gameEnded);
+            return true;
+        } catch (error) {
+            console.warn("Could not load the saved game.", error);
+            return false;
+        }
+    }
+
+    function resetGame() {
+        // Invalidate any delayed animation callback from the previous game.
+        turnToken++;
+        try {
+            localStorage.removeItem(saveKey);
+        } catch (error) {
+            console.warn("Could not clear the saved game.", error);
+        }
+
+        tiles = [];
+        nextId = 1;
+        score = 0;
+        busy = false;
+        gameEnded = false;
+        resultDisplay.innerHTML = 'A little game made with love 💜 Slide the tiles and reach <b>2048</b>!';
+        grid.querySelectorAll(".tile").forEach(tile => tile.remove());
+        spawnTile();
+        spawnTile();
+        renderAnimated();
+        saveGame();
+    }
+
+    function makeTile(value, row, col) {
+        return { id: nextId++, value, row, col };
+    }
+
+    function positionTile(el, row, col) {
+        el.style.left = `calc(${col * 25}% + var(--tile-inset, 7px))`;
+        el.style.top = `calc(${row * 25}% + var(--tile-inset, 7px))`;
+    }
+
+    function spawnTile() {
+        const empty = [];
+        for (let row = 0; row < width; row++) {
+            for (let col = 0; col < width; col++) {
+                if (!tiles.some(tile => tile.row === row && tile.col === col)) {
+                    empty.push({ row, col });
+                }
+            }
+        }
+        if (!empty.length) return;
+        const spot = empty[Math.floor(Math.random() * empty.length)];
+        tiles.push(makeTile(Math.random() < 0.9 ? 2 : 4, spot.row, spot.col));
+    }
+
+    function renderAnimated(mergedIds = new Set()) {
+        const existing = new Map();
+        grid.querySelectorAll(".tile").forEach(el => existing.set(Number(el.dataset.id), el));
+
+        const nextIds = new Set(tiles.map(tile => tile.id));
+        existing.forEach((el, id) => {
+            if (!nextIds.has(id)) el.remove();
+        });
+
+        tiles.forEach(tile => {
+            let el = existing.get(tile.id);
+            if (!el) {
+                el = document.createElement("div");
+                el.className = "tile";
+                el.dataset.id = tile.id;
+                el.dataset.value = tile.value;
+                el.textContent = tile.value;
+                el.style.transition = "none";
+                positionTile(el, tile.row, tile.col);
+                grid.appendChild(el);
+                void el.offsetWidth;
+                el.style.transition = "left 280ms cubic-bezier(.2,.75,.25,1), top 280ms cubic-bezier(.2,.75,.25,1), background-color 120ms ease";
+                el.classList.add("tile-new");
+                setTimeout(() => el.classList.remove("tile-new"), 220);
+            } else {
+                el.dataset.value = tile.value;
+                el.textContent = tile.value;
+                void el.offsetWidth;
+                positionTile(el, tile.row, tile.col);
+                if (mergedIds.has(tile.id)) {
+                    el.classList.remove("tile-merge");
+                    void el.offsetWidth;
+                    el.classList.add("tile-merge");
+                    setTimeout(() => el.classList.remove("tile-merge"), 250);
+                }
+            }
+        });
+        scoreDisplay.textContent = score;
+        saveGame();
+    }
+
+    function move(direction) {
+        if (busy || gameEnded) return;
+
+        const before = tiles.map(tile => ({ ...tile }));
+        const beforeSignature = before.map(t => `${t.value}:${t.row}:${t.col}`).sort().join("|");
+        const next = [];
+        let gained = 0;
+        const mergedIds = new Set();
+
+        for (let line = 0; line < width; line++) {
+            const lineTiles = before
+                .filter(tile => direction === "left" || direction === "right"
+                    ? tile.row === line : tile.col === line)
+                .sort((a, b) => {
+                    const av = direction === "left" || direction === "right" ? a.col : a.row;
+                    const bv = direction === "left" || direction === "right" ? b.col : b.row;
+                    return (direction === "right" || direction === "down") ? bv - av : av - bv;
+                });
+
+            const packed = [];
+            for (let i = 0; i < lineTiles.length; i++) {
+                const current = lineTiles[i];
+                const following = lineTiles[i + 1];
+                if (following && current.value === following.value) {
+                    const value = current.value * 2;
+                    const row = direction === "left" || direction === "right" ? line : packed.length;
+                    const col = direction === "left" || direction === "right" ? packed.length : line;
+                    packed.push(makeTile(value, row, col));
+                    mergedIds.add(packed[packed.length - 1].id);
+                    gained += value;
+                    i++;
+                } else {
+                    packed.push({ ...current });
+                }
+            }
+
+            packed.forEach((tile, index) => {
+                if (direction === "right") tile.col = width - 1 - index;
+                else if (direction === "left") tile.col = index;
+                else if (direction === "down") tile.row = width - 1 - index;
+                else tile.row = index;
+                if (direction === "left" || direction === "right") tile.row = line;
+                else tile.col = line;
+                next.push(tile);
+            });
+        }
+
+        const afterSignature = next.map(t => `${t.value}:${t.row}:${t.col}`).sort().join("|");
+        if (beforeSignature === afterSignature) return;
+
+        tiles = next;
+        score += gained;
+        busy = true;
+        renderAnimated(mergedIds);
+
+        const thisTurn = turnToken;
+        setTimeout(() => {
+            if (thisTurn !== turnToken) return;
+            spawnTile();
+            renderAnimated();
+            busy = false;
+            finishTurn();
+            saveGame();
+        }, 300);
+    }
+
+    function finishTurn() {
+        if (tiles.some(tile => tile.value >= 2048)) {
+            resultDisplay.innerHTML = "You did it, Mom! <b>2048!</b> 💜";
+            gameEnded = true;
+            saveGame();
+            return;
+        }
+        if (!hasMoves()) {
+            resultDisplay.textContent = "No more moves — thanks for playing! 💙";
+            gameEnded = true;
+        }
+        saveGame();
+    }
+
+    function hasMoves() {
+        if (tiles.length < width * width) return true;
+        const board = Array.from({ length: width }, () => Array(width).fill(0));
+        tiles.forEach(tile => board[tile.row][tile.col] = tile.value);
+        for (let row = 0; row < width; row++) {
+            for (let col = 0; col < width; col++) {
+                if (row < width - 1 && board[row][col] === board[row + 1][col]) return true;
+                if (col < width - 1 && board[row][col] === board[row][col + 1]) return true;
+            }
+        }
+        return false;
+    }
+
+    document.addEventListener("keydown", event => {
+        const keys = {
+            ArrowLeft: "left", ArrowRight: "right",
+            ArrowUp: "up", ArrowDown: "down"
+        };
+        if (keys[event.key]) {
+            event.preventDefault();
+            move(keys[event.key]);
+        }
+    });
+
+    // Prevent mobile browsers from scrolling the page during vertical game swipes.
+    // The board's touchend handler still reads the swipe and moves the tiles.
+    document.addEventListener("touchmove", event => {
+        event.preventDefault();
+    }, { passive: false });
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    grid.addEventListener("touchstart", event => {
+        touchStartX = event.changedTouches[0].clientX;
+        touchStartY = event.changedTouches[0].clientY;
+    }, { passive: true });
+    grid.addEventListener("touchend", event => {
+        const dx = event.changedTouches[0].clientX - touchStartX;
+        const dy = event.changedTouches[0].clientY - touchStartY;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 25) return;
+        move(Math.abs(dx) > Math.abs(dy)
+            ? (dx > 0 ? "right" : "left")
+            : (dy > 0 ? "down" : "up"));
+    }, { passive: true });
+
+    const style = document.createElement("style");
+    style.textContent = `
+        .grid { --tile-inset: 7px; }
+        .tile { background: var(--tile-color, #f4f1ff); }
+        .tile[data-value="2"] { --tile-color: #f4f1ff; }
+        .tile[data-value="4"] { --tile-color: #e5e5ff; }
+        .tile[data-value="8"] { --tile-color: #cdeeff; }
+        .tile[data-value="16"] { --tile-color: #b9dcff; }
+        .tile[data-value="32"] { --tile-color: #c7caff; }
+        .tile[data-value="64"] { --tile-color: #b8b8f4; }
+        .tile[data-value="128"] { --tile-color: #b6d5ff; }
+        .tile[data-value="256"] { --tile-color: #b5c5f5; }
+        .tile[data-value="512"] { --tile-color: #9de0ff; }
+        .tile[data-value="1024"] { --tile-color: #b7b0ff; }
+        .tile[data-value="2048"] { --tile-color: #9c8ce8; }
+        @media (max-width: 420px) { .grid { --tile-inset: 5px; } }
+    `;
+    document.head.appendChild(style);
+
+    const resetButton = document.querySelector("#reset-button");
+    resetButton.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        resetGame();
+    });
+
+    grid.classList.add("sliding-board");
+    cells.forEach((cell, index) => {
+        positionTile(cell, Math.floor(index / width), index % width);
+    });
+
+    if (loadGame()) {
+        renderAnimated();
+        if (gameEnded) finishTurn();
+    } else {
+        spawnTile();
+        spawnTile();
+        renderAnimated();
+        saveGame();
+    }
+});
+
+    </script>
 </head>
 <body>
 <div class="container">
